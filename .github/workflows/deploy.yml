@@ -2,7 +2,7 @@ name: Deploy Next.js to GitHub Pages
 
 on:
   push:
-    branches: [master]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -31,6 +31,14 @@ jobs:
         with:
           static_site_generator: next
 
+      - name: Temporarily modify package.json
+        run: |
+          # Create a backup of the original package.json
+          cp package.json package.json.bak
+
+          # Remove the custom install script that uses Deno
+          jq 'del(.scripts.install)' package.json > temp.json && mv temp.json package.json
+
       - name: Restore cache
         uses: actions/cache@v4
         with:
@@ -41,7 +49,7 @@ jobs:
             ${{ runner.os }}-nextjs-
 
       - name: Install dependencies
-        run: npm install
+        run: npm install --no-scripts
 
       - name: Update next.config.ts for GitHub Pages
         run: |
@@ -65,6 +73,9 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./out
+
+      - name: Restore original package.json
+        run: mv package.json.bak package.json
 
   deploy:
     environment:
