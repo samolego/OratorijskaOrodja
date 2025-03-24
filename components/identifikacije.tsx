@@ -180,7 +180,7 @@ const UploadTemplateStep = ({
     <div className="space-y-2">
       <h3 className="font-medium">Naloži predlogo</h3>
       <p className="text-sm text-gray-500">
-        Naloži dokument DOCX ali ODT z oznakami v stilu {"{oznaka}"} (npr: "
+        Naloži dokument DOCX ali ODT z oznakami v stilu {"{oznaka}"} (npr:
         {"{ime}"}).
       </p>
 
@@ -381,7 +381,7 @@ const Identifikacije = () => {
 
       // Try to get content based on document type (DOCX or ODT)
       let documentContent = "";
-      let placeholderMap = new Map<string, string>(); // Maps readable names to actual XML
+      const placeholderMap = new Map<string, string>(); // Maps readable names to actual XML
 
       if (file.name.endsWith(".docx")) {
         // For DOCX
