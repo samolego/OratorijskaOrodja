@@ -111,7 +111,7 @@ function SidebarNav({ closeMenu }: SidebarNavProps) {
     {
       icon: <QrCode className="mr-2 h-4 w-4" />,
       href: "/qr-code",
-      label: "QR Code Generator",
+      label: "Generator kod QR",
     },
   ];
 

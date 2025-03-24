@@ -38,7 +38,7 @@ export default function DashboardPage() {
           <CardHeader>
             <div className="flex items-center gap-2">
               <QrCode className="h-5 w-5" />
-              <CardTitle>QR Code Generator</CardTitle>
+              <CardTitle>Generator kod QR</CardTitle>
             </div>
           </CardHeader>
           <CardContent>
