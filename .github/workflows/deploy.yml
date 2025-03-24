@@ -65,7 +65,6 @@ jobs:
           };
 
           export default nextConfig;" > next.config.ts
-
       - name: Build with Next.js
         run: npm run build
 
