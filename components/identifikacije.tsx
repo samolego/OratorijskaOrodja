@@ -673,7 +673,7 @@ const Identifikacije = () => {
         );
 
         // Count placeholders in the template
-        const placeholderCount = {};
+        const placeholderCount: Record<string, number> = {};
         placeholders.forEach((placeholder) => {
           const regex = new RegExp(`\\{${placeholder}\\}`, "g");
           const matches = [...templateContent.matchAll(regex)];
