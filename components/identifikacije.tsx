@@ -360,7 +360,10 @@ const Identifikacije = () => {
       setError("");
       return true;
     } catch (err) {
-      setError("Failed to parse data. Please ensure it's properly formatted.");
+      setError(
+        "Failed to parse data. Please ensure it's properly formatted. " +
+          err.message,
+      );
       return false;
     }
   }, [sheetData]);
@@ -754,7 +757,7 @@ const Identifikacije = () => {
       document.body.removeChild(a);
 
       setIsProcessing(false);
-    } catch (err: any) {
+    } catch (err) {
       setError(`Error generating document: ${err.message}`);
       setIsProcessing(false);
     }
