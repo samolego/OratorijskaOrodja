@@ -21,11 +21,8 @@ import {
   ChevronRight,
   CheckCircle,
   RefreshCw,
-  MoveDown,
-  MoveUp,
 } from "lucide-react";
 import JSZip, { loadAsync } from "jszip";
-import _ from "lodash";
 
 // Types
 interface Mapping {
@@ -323,6 +320,9 @@ const Identifikacije = () => {
   const [templateContent, setTemplateContent] = useState<ArrayBuffer | null>(
     null,
   );
+  const [placeholderMapping, setPlaceholderMapping] = useState<
+    Map<string, string>
+  >(new Map());
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState("");
 
@@ -379,8 +379,9 @@ const Identifikacije = () => {
       const zip = new JSZip();
       const loadedZip = await zip.loadAsync(fileContent);
 
+      // Try to get content based on document type (DOCX or ODT)
       let documentContent = "";
-      let extractedPlaceholders = [];
+      let placeholderMap = new Map<string, string>(); // Maps readable names to actual XML
 
       if (file.name.endsWith(".docx")) {
         // For DOCX
@@ -389,39 +390,39 @@ const Identifikacije = () => {
             .file("word/document.xml")!
             .async("string");
 
-          console.log(
-            "Extracted DOCX content, length:",
-            documentContent.length,
-          );
+          // For DOCX, we need a special approach to handle split tags
+          // First, normalize the XML by removing line breaks, which can help with regex
+          const normalizedXml = documentContent.replace(/\s+/g, " ");
 
-          // For DOCX, we need to extract text content from w:t tags
-          const textContent = [];
-          const textRegex = /<w:t[^>]*>(.*?)<\/w:t>/g;
-          let textMatch;
+          // Use a regex that captures everything between { and } including XML tags
+          const complexRegex = /\{((?:[^{}]|<[^>]*>)*)\}/g;
+          const matches = [...normalizedXml.matchAll(complexRegex)];
 
-          while ((textMatch = textRegex.exec(documentContent)) !== null) {
-            textContent.push(textMatch[1]);
+          for (const match of matches) {
+            const fullPlaceholder = match[0]; // The entire placeholder with XML tags
+
+            // Extract just the text content from the placeholder
+            // This regex extracts text between <w:t> tags
+            const textContentRegex = /<w:t[^>]*>(.*?)<\/w:t>/g;
+            const textMatches = [...fullPlaceholder.matchAll(textContentRegex)];
+
+            if (textMatches.length > 0) {
+              // Combine all text parts to get the readable name
+              const readableName = textMatches
+                .map((m) => m[1])
+                .join("")
+                .trim()
+                .replace(/[\{\}]/g, ""); // Remove any leftover braces
+
+              if (readableName) {
+                placeholderMap.set(readableName, fullPlaceholder);
+              }
+            } else {
+              // Simple placeholder without XML tags
+              const simpleName = fullPlaceholder.replace(/[\{\}]/g, "");
+              placeholderMap.set(simpleName, fullPlaceholder);
+            }
           }
-
-          console.log("Extracted text elements:", textContent.length);
-
-          // Join text content and find placeholders
-          const joinedText = textContent.join("");
-          console.log("Joined text length:", joinedText.length);
-
-          // Find placeholders in the joined text
-          const placeholderRegex = /\{([^{}]+)\}/g;
-          let placeholderMatch;
-
-          while (
-            (placeholderMatch = placeholderRegex.exec(joinedText)) !== null
-          ) {
-            extractedPlaceholders.push(placeholderMatch[1]);
-          }
-
-          // Remove duplicates
-          extractedPlaceholders = [...new Set(extractedPlaceholders)];
-          console.log("Extracted placeholders:", extractedPlaceholders);
         }
       } else if (file.name.endsWith(".odt")) {
         // For ODT
@@ -430,12 +431,14 @@ const Identifikacije = () => {
             .file("content.xml")!
             .async("string");
 
-          // Use regular placeholder extraction for ODT
+          // ODT placeholders are simpler
           const regex = /\{([^{}]+)\}/g;
           const matches = [...documentContent.matchAll(regex)];
-          extractedPlaceholders = [
-            ...new Set(matches.map((match) => match[1])),
-          ];
+
+          for (const match of matches) {
+            const placeholder = match[1];
+            placeholderMap.set(placeholder, `{${placeholder}}`);
+          }
         }
       }
 
@@ -443,27 +446,25 @@ const Identifikacije = () => {
         throw new Error("Could not extract content from document");
       }
 
-      // If we didn't find any placeholders, try the standard approach as fallback
-      if (extractedPlaceholders.length === 0) {
-        console.log(
-          "No placeholders found with special handling, using standard approach",
-        );
-        const regex = /\{([^{}]+)\}/g;
-        const matches = [...documentContent.matchAll(regex)];
-        extractedPlaceholders = [...new Set(matches.map((match) => match[1]))];
-      }
-
-      console.log("Final placeholders list:", extractedPlaceholders);
+      // Extract unique placeholders
+      const extractedPlaceholders = [...new Set(placeholderMap.keys())];
       setPlaceholders(extractedPlaceholders);
+
+      // Store the placeholder mapping in a ref or state for later use
+      // You'll need to add this state
+      setPlaceholderMapping(placeholderMap);
 
       // Create initial mappings based on similarity
       const initialMappings = extractedPlaceholders.map((placeholder) => {
+        console.log("Finding best header for: " + placeholder);
+        console.log("Available headers:", headers);
         // Find best matching header
         let bestHeader = "";
         let bestScore = 0;
 
         headers.forEach((header) => {
           const score = stringSimilarity(placeholder, header);
+          console.log("Score for", header, ":", score);
           if (score > bestScore) {
             bestScore = score;
             bestHeader = header;
@@ -494,62 +495,6 @@ const Identifikacije = () => {
       header,
     };
     setMappings(newMappings);
-  };
-
-  // Process placeholders for a single row
-  const processPlaceholders = (
-    content: string,
-    row: Record<string, string>,
-    mappingDict: { [key: string]: string },
-  ) => {
-    let newContent = content;
-
-    // Process regular placeholders
-    placeholders.forEach((placeholder) => {
-      // Skip "Telefon" placeholder as we'll handle it specially
-      if (placeholder.toLowerCase().includes("telefon")) {
-        return;
-      }
-
-      const header = mappingDict[placeholder];
-      if (header && row[header] !== undefined) {
-        const regex = new RegExp(`\\{${placeholder}\\}`, "g");
-        newContent = newContent.replace(regex, row[header]);
-      }
-    });
-
-    // Special handling for Telefon placeholder
-    const telefonPlaceholders = placeholders.filter((p) =>
-      p.toLowerCase().includes("telefon"),
-    );
-
-    if (telefonPlaceholders.length > 0) {
-      // Find telefon headers
-      const telefonHeaders = telefonPlaceholders
-        .map((p) => mappingDict[p])
-        .filter((header) => header && row[header]);
-
-      // Get telefon values
-      const telefonValues = telefonHeaders
-        .map((header) => row[header])
-        .filter((value) => value && value.trim());
-
-      // Format telefon values
-      let telefonText = "";
-      if (telefonValues.length >= 2) {
-        telefonText = `${telefonValues[0]} / ${telefonValues[1]}`;
-      } else if (telefonValues.length === 1) {
-        telefonText = telefonValues[0];
-      }
-
-      // Replace all telefon placeholders with the combined value
-      telefonPlaceholders.forEach((placeholder) => {
-        const regex = new RegExp(`\\{${placeholder}\\}`, "g");
-        newContent = newContent.replace(regex, telefonText);
-      });
-    }
-
-    return newContent;
   };
 
   // Generate merged documents and trigger download
@@ -597,7 +542,14 @@ const Identifikacije = () => {
         // Count placeholders in the template to know how many fit per page
         const placeholderCount = {};
         placeholders.forEach((placeholder) => {
-          const regex = new RegExp(`\\{${placeholder}\\}`, "g");
+          const actualPlaceholder =
+            placeholderMapping.get(placeholder) || `{${placeholder}}`;
+          // Escape special regex characters
+          const escapedPlaceholder = actualPlaceholder.replace(
+            /[.*+?^${}()|[\]\\]/g,
+            "\\$&",
+          );
+          const regex = new RegExp(escapedPlaceholder, "g");
           const matches = [...templateBody.matchAll(regex)];
           placeholderCount[placeholder] = matches.length;
         });
@@ -616,7 +568,16 @@ const Identifikacije = () => {
 
           // Process each placeholder type
           for (const placeholder of placeholders) {
-            const regex = new RegExp(`\\{${placeholder}\\}`, "g");
+            const actualPlaceholder =
+              placeholderMapping.get(placeholder) || `{${placeholder}}`;
+
+            // Escape special regex characters in the actualPlaceholder
+            const escapedPlaceholder = actualPlaceholder.replace(
+              /[.*+?^${}()|[\]\\]/g,
+              "\\$&",
+            );
+
+            const regex = new RegExp(escapedPlaceholder, "g");
             const header = mappingDict[placeholder];
 
             if (!header) continue;
@@ -670,7 +631,11 @@ const Identifikacije = () => {
           currentRowIndex += placeholdersFilledOnThisPage
             ? Math.max(
                 1,
-                Math.min(...(Object.values(placeholderCount) as number[])),
+                Math.min(
+                  ...(Object.values(placeholderCount).filter(
+                    (v) => v > 0,
+                  ) as number[]),
+                ),
               )
             : 1;
         }
@@ -794,7 +759,6 @@ const Identifikacije = () => {
       setIsProcessing(false);
     }
   };
-
   // Helper function for telefon formatting
   const getFormattedTelefonValue = (
     row: Record<string, string>,
