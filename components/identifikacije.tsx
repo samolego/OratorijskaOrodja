@@ -121,7 +121,7 @@ const ErrorAlert = ({ error }: { error: string }) => {
   return (
     <Alert variant="destructive">
       <AlertCircle className="h-4 w-4" />
-      <AlertTitle>Error</AlertTitle>
+      <AlertTitle>Napaka</AlertTitle>
       <AlertDescription>{error}</AlertDescription>
     </Alert>
   );
@@ -140,14 +140,14 @@ const PasteDataStep = ({
 }) => {
   return (
     <div className="space-y-2">
-      <h3 className="font-medium">Paste your spreadsheet data</h3>
+      <h3 className="font-medium">Tukaj prilepi podatke iz preglednice</h3>
       <p className="text-sm text-gray-500">
-        Copy data from Google Sheets or Excel and paste it below. The first row
-        should contain column headers.
+        Podatke kopirajte iz Google Sheets ali Excela in jih prilepite spodaj.
+        Prva (zgornja) vrstica mora vsebovati naslove stolpcev.
       </p>
 
       <Textarea
-        placeholder="Paste your data here..."
+        placeholder="Tu prilepi podatke ..."
         className="min-h-48"
         value={sheetData}
         onChange={(e) => setSheetData(e.target.value)}
@@ -181,16 +181,16 @@ const UploadTemplateStep = ({
 }) => {
   return (
     <div className="space-y-2">
-      <h3 className="font-medium">Upload your document template</h3>
+      <h3 className="font-medium">Naloži predlogo</h3>
       <p className="text-sm text-gray-500">
-        Upload a DOCX or ODT file with placeholders in the format{" "}
-        {"{placeholder}"}.
+        Naloži dokument DOCX ali ODT z oznakami v stilu {"{oznaka}"} (npr: "
+        {"{ime}"}).
       </p>
 
       <div className="border-2 border-dashed rounded-md p-8 text-center">
         <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
         <p className="text-sm mb-4">
-          Drag & drop your template file here, or click to browse
+          Povlecite in spustite svojo predlogo sem ali kliknite za brskanje
         </p>
         <Input
           type="file"
@@ -210,12 +210,12 @@ const UploadTemplateStep = ({
           {isProcessing ? (
             <>
               <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-              Processing...
+              Obdelava ...
             </>
           ) : (
             <>
               <FileText className="mr-2 h-4 w-4" />
-              Select Template
+              Izberi predlogo
             </>
           )}
         </Button>
@@ -225,7 +225,7 @@ const UploadTemplateStep = ({
         <div className="bg-green-50 p-4 rounded-md flex items-center">
           <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
           <span>
-            Template uploaded: <strong>{templateFile.name}</strong>
+            Naložena predloga: <strong>{templateFile.name}</strong>
           </span>
         </div>
       )}
@@ -252,16 +252,15 @@ const ReviewMappingsStep = ({
 }) => {
   return (
     <div className="space-y-2">
-      <h3 className="font-medium">Review field mappings</h3>
+      <h3 className="font-medium">Pregled preslikav polj</h3>
       <p className="text-sm text-gray-500">
-        Match document placeholders with spreadsheet headers. Drag to reorder if
-        needed.
+        Preslikave polj v dokumentu s stolpci v seznamu.
       </p>
 
       <div className="border rounded-md p-4">
         <div className="grid grid-cols-5 gap-4 font-medium border-b pb-2 mb-2">
-          <div className="col-span-2">Placeholder in Document</div>
-          <div className="col-span-3">Spreadsheet Column</div>
+          <div className="col-span-2">Oznaka v dokumentu</div>
+          <div className="col-span-3">Stolpec v seznamu</div>
         </div>
 
         {mappings.map((mapping, index) => (
@@ -300,10 +299,10 @@ const ReviewMappingsStep = ({
           {isProcessing ? (
             <>
               <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-              Generating...
+              Ustvarjanje ...
             </>
           ) : (
-            <>Generate Documents</>
+            <>Ustvari dokument</>
           )}
         </Button>
       </div>
@@ -336,7 +335,7 @@ const Identifikacije = () => {
       // Split by newlines and then by tabs or commas
       const lines = sheetData.trim().split("\n");
       if (lines.length < 2) {
-        setError("Not enough data - need at least headers and one row");
+        setError("Premalo podatkov - potrebna je vsaj glava in ena vrstica!");
         return false;
       }
 
@@ -576,19 +575,19 @@ const Identifikacije = () => {
         <CardHeader>
           <CardTitle className="text-2xl">Identifikacije Tool</CardTitle>
           <CardDescription>
-            Create personalized documents from your spreadsheet data
+            Ustvari identifikacije iz podatkov v tabeli.
           </CardDescription>
         </CardHeader>
 
         <CardContent>
           <Tabs value={activeStep} className="w-full">
             <TabsList className="grid w-full grid-cols-3 mb-8">
-              <TabsTrigger value="paste">1. Paste Data</TabsTrigger>
+              <TabsTrigger value="paste">1. Prilepi podatke</TabsTrigger>
               <TabsTrigger value="upload" disabled={headers.length === 0}>
-                2. Upload Template
+                2. Naloži predlogo
               </TabsTrigger>
               <TabsTrigger value="review" disabled={!templateContent}>
-                3. Review & Generate
+                3. Preveri in ustvari
               </TabsTrigger>
             </TabsList>
 
@@ -624,8 +623,8 @@ const Identifikacije = () => {
         </CardContent>
 
         <CardFooter className="border-t pt-4 text-sm text-gray-500">
-          All processing is done client-side. Your data never leaves your
-          browser.
+          Vse procesiranje se izvede na strani brskalnika. Vaši podatki nikoli
+          ne zapustijo vašega brskalnika in niso poslani nikamor.
         </CardFooter>
       </Card>
     </div>

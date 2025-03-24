@@ -71,12 +71,13 @@ export function QRCode({
       <CardHeader className="text-center">
         <CardTitle>QR Code Generator</CardTitle>
         <CardDescription>
-          Enter a URL or text to generate a QR code
+          Vnesi URL ali besedilo, da ustvariš kodo QR. Kodo lahko shraniš kot
+          PNG datoteko.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-2">
-          <Label htmlFor="url">URL or Text</Label>
+          <Label htmlFor="url">URL ali besedilo</Label>
           <Input
             id="url"
             placeholder="https://example.com"
@@ -87,7 +88,7 @@ export function QRCode({
 
         <div className="space-y-2">
           <div className="flex justify-between items-center">
-            <Label htmlFor="error-level">Error Correction Level</Label>
+            <Label htmlFor="error-level">Stopnja popravljanja napak</Label>
             <span className="text-sm text-muted-foreground">
               {ERROR_LEVELS.find((level) => level.value === errorLevel)?.label}
             </span>
@@ -110,8 +111,9 @@ export function QRCode({
             ))}
           </div>
           <p className="text-xs text-muted-foreground mt-1">
-            Higher error correction allows QR codes to remain readable even when
-            partially damaged or obscured, but increases code complexity.
+            Večja stopnja popravljanja napak omogoča, da kode QR ostanejo
+            čitljive tudi, če so delno poškodovane ali zakrite. Koda QR na ta
+            račun postane kompleksnejša.
           </p>
         </div>
 
@@ -130,7 +132,7 @@ export function QRCode({
             </div>
           ) : (
             <div className="text-center text-muted-foreground">
-              Enter a URL or text to generate QR code
+              Vnesi URL ali besedilo, da ustvariš kodo QR.
             </div>
           )}
         </div>

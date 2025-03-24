@@ -37,20 +37,11 @@ export default function LandingPage() {
         <div className="container px-4 sm:px-8 py-12 md:py-24 lg:py-32">
           <div className="mx-auto max-w-3xl space-y-8 text-center">
             <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl">
-              Productivity Tools for Oratorij
+              Oratorijska orodja
             </h1>
             <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl">
-              Simplify your workflow with our specialized toolkit designed for
-              Oratorij organizers.
+              Zbirka administrativnih orodij, razvita za Oratorij Grosuplje.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" asChild>
-                <Link href="/dashboard">Get Started</Link>
-              </Button>
-              <Button size="lg" variant="outline" asChild>
-                <Link href="/about">Learn More</Link>
-              </Button>
-            </div>
           </div>
         </div>
       </section>
@@ -60,7 +51,7 @@ export default function LandingPage() {
         <div className="container px-4 sm:px-8 py-12 md:py-24">
           <div className="mx-auto max-w-6xl">
             <h2 className="text-3xl font-bold tracking-tighter text-center mb-12">
-              Available Tools
+              Orodja, ki so na voljo
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Identifikacije Tool */}
@@ -68,18 +59,19 @@ export default function LandingPage() {
                 <CardHeader>
                   <div className="flex items-center gap-2">
                     <Mail className="h-5 w-5" />
-                    <CardTitle>Identifikacije Tool</CardTitle>
+                    <CardTitle>Izdelovalnik identifikacij</CardTitle>
                   </div>
                   <CardDescription>
-                    Easily create personalized emails and documents for multiple
-                    recipients
+                    Omogoča preprosto izdelavo identifikacijskih listov za
+                    otroke na oratoriju.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground">
-                    Streamline your communication by generating personalized
-                    emails, letters, or documents using templates and data from
-                    spreadsheets.
+                    Omogoča preprosto izdelavo identifikacijskih listov za
+                    otroke na oratoriju. Deluje na princip &quot;mail
+                    merge&quot;. Izbereš dokument s posebnimi oznakami, ki se
+                    spremenijo v podatke o otrocih, ki jih skopiraš in prilepiš.
                   </p>
                 </CardContent>
                 <CardFooter>
@@ -97,23 +89,22 @@ export default function LandingPage() {
                 <CardHeader>
                   <div className="flex items-center gap-2">
                     <QrCode className="h-5 w-5" />
-                    <CardTitle>QR Code Generator</CardTitle>
+                    <CardTitle>Generator QR kod</CardTitle>
                   </div>
                   <CardDescription>
-                    Create custom QR codes for events, resources, and more
+                    Ustvari QR kode za spletne povezave.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground">
-                    Generate QR codes for your events, links, or resources.
-                    Perfect for registrations, attendance tracking, and sharing
-                    information.
+                    Omogoča izdelavo QR kod iz podanega besedila - npr. za
+                    povezavo na spletno prijavnico.
                   </p>
                 </CardContent>
                 <CardFooter>
                   <Button className="w-full" asChild>
                     <Link href="/qr-code">
-                      <span>Open QR Generator</span>
+                      <span>Odpri generator QR kod</span>
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                   </Button>
@@ -132,21 +123,7 @@ export default function LandingPage() {
             <span>Oratorij Toolkit</span>
           </div>
           <div className="text-center md:text-left text-sm text-muted-foreground mt-4 md:mt-0">
-            © {new Date().getFullYear()} Oratorij. All rights reserved.
-          </div>
-          <div className="flex gap-4 mt-4 md:mt-0">
-            <Button className="w-full" asChild>
-              <Link href="/identifikacije">
-                <span>Open Identifikacije</span>
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-            <Button className="w-full" asChild>
-              <Link href="/qr-code">
-                <span>Open QR Generator</span>
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
+            © {new Date().getFullYear()} Oratorij Grosuplje.
           </div>
         </div>
       </footer>
