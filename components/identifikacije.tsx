@@ -161,7 +161,7 @@ const PasteDataStep = ({
           disabled={!sheetData.trim()}
           className="w-full sm:w-auto"
         >
-          Continue <ChevronRight className="ml-2 h-4 w-4" />
+          Nadaljuj <ChevronRight className="ml-2 h-4 w-4" />
         </Button>
       </div>
     </div>
@@ -317,7 +317,6 @@ const Identifikacije = () => {
   const [sheetData, setSheetData] = useState("");
   const [headers, setHeaders] = useState<string[]>([]);
   const [rows, setRows] = useState<Record<string, string>[]>([]);
-  const [hasHeaders, setHasHeaders] = useState(true);
   const [placeholders, setPlaceholders] = useState<string[]>([]);
   const [mappings, setMappings] = useState<Mapping[]>([]);
   const [templateFile, setTemplateFile] = useState<File | null>(null);
@@ -380,8 +379,8 @@ const Identifikacije = () => {
       const zip = new JSZip();
       const loadedZip = await zip.loadAsync(fileContent);
 
-      // Try to get content based on document type (DOCX or ODT)
       let documentContent = "";
+      let extractedPlaceholders = [];
 
       if (file.name.endsWith(".docx")) {
         // For DOCX
@@ -389,6 +388,40 @@ const Identifikacije = () => {
           documentContent = await loadedZip
             .file("word/document.xml")!
             .async("string");
+
+          console.log(
+            "Extracted DOCX content, length:",
+            documentContent.length,
+          );
+
+          // For DOCX, we need to extract text content from w:t tags
+          const textContent = [];
+          const textRegex = /<w:t[^>]*>(.*?)<\/w:t>/g;
+          let textMatch;
+
+          while ((textMatch = textRegex.exec(documentContent)) !== null) {
+            textContent.push(textMatch[1]);
+          }
+
+          console.log("Extracted text elements:", textContent.length);
+
+          // Join text content and find placeholders
+          const joinedText = textContent.join("");
+          console.log("Joined text length:", joinedText.length);
+
+          // Find placeholders in the joined text
+          const placeholderRegex = /\{([^{}]+)\}/g;
+          let placeholderMatch;
+
+          while (
+            (placeholderMatch = placeholderRegex.exec(joinedText)) !== null
+          ) {
+            extractedPlaceholders.push(placeholderMatch[1]);
+          }
+
+          // Remove duplicates
+          extractedPlaceholders = [...new Set(extractedPlaceholders)];
+          console.log("Extracted placeholders:", extractedPlaceholders);
         }
       } else if (file.name.endsWith(".odt")) {
         // For ODT
@@ -396,6 +429,13 @@ const Identifikacije = () => {
           documentContent = await loadedZip
             .file("content.xml")!
             .async("string");
+
+          // Use regular placeholder extraction for ODT
+          const regex = /\{([^{}]+)\}/g;
+          const matches = [...documentContent.matchAll(regex)];
+          extractedPlaceholders = [
+            ...new Set(matches.map((match) => match[1])),
+          ];
         }
       }
 
@@ -403,26 +443,27 @@ const Identifikacije = () => {
         throw new Error("Could not extract content from document");
       }
 
-      // Find all placeholders with regex
-      const regex = /\{([^{}]+)\}/g;
-      const matches = [...documentContent.matchAll(regex)];
-      const extractedPlaceholders = [
-        ...new Set(matches.map((match) => match[1])),
-      ];
+      // If we didn't find any placeholders, try the standard approach as fallback
+      if (extractedPlaceholders.length === 0) {
+        console.log(
+          "No placeholders found with special handling, using standard approach",
+        );
+        const regex = /\{([^{}]+)\}/g;
+        const matches = [...documentContent.matchAll(regex)];
+        extractedPlaceholders = [...new Set(matches.map((match) => match[1]))];
+      }
 
+      console.log("Final placeholders list:", extractedPlaceholders);
       setPlaceholders(extractedPlaceholders);
 
       // Create initial mappings based on similarity
       const initialMappings = extractedPlaceholders.map((placeholder) => {
-        console.log("Finding best header for: " + placeholder);
-        console.log("Available headers:", headers);
         // Find best matching header
         let bestHeader = "";
         let bestScore = 0;
 
         headers.forEach((header) => {
           const score = stringSimilarity(placeholder, header);
-          console.log("Score for", header, ":", score);
           if (score > bestScore) {
             bestScore = score;
             bestHeader = header;
@@ -455,11 +496,71 @@ const Identifikacije = () => {
     setMappings(newMappings);
   };
 
+  // Process placeholders for a single row
+  const processPlaceholders = (
+    content: string,
+    row: Record<string, string>,
+    mappingDict: { [key: string]: string },
+  ) => {
+    let newContent = content;
+
+    // Process regular placeholders
+    placeholders.forEach((placeholder) => {
+      // Skip "Telefon" placeholder as we'll handle it specially
+      if (placeholder.toLowerCase().includes("telefon")) {
+        return;
+      }
+
+      const header = mappingDict[placeholder];
+      if (header && row[header] !== undefined) {
+        const regex = new RegExp(`\\{${placeholder}\\}`, "g");
+        newContent = newContent.replace(regex, row[header]);
+      }
+    });
+
+    // Special handling for Telefon placeholder
+    const telefonPlaceholders = placeholders.filter((p) =>
+      p.toLowerCase().includes("telefon"),
+    );
+
+    if (telefonPlaceholders.length > 0) {
+      // Find telefon headers
+      const telefonHeaders = telefonPlaceholders
+        .map((p) => mappingDict[p])
+        .filter((header) => header && row[header]);
+
+      // Get telefon values
+      const telefonValues = telefonHeaders
+        .map((header) => row[header])
+        .filter((value) => value && value.trim());
+
+      // Format telefon values
+      let telefonText = "";
+      if (telefonValues.length >= 2) {
+        telefonText = `${telefonValues[0]} / ${telefonValues[1]}`;
+      } else if (telefonValues.length === 1) {
+        telefonText = telefonValues[0];
+      }
+
+      // Replace all telefon placeholders with the combined value
+      telefonPlaceholders.forEach((placeholder) => {
+        const regex = new RegExp(`\\{${placeholder}\\}`, "g");
+        newContent = newContent.replace(regex, telefonText);
+      });
+    }
+
+    return newContent;
+  };
+
   // Generate merged documents and trigger download
   const generateDocuments = async () => {
     try {
       setIsProcessing(true);
       setError("");
+
+      if (!templateContent || !templateFile) {
+        throw new Error("Template file is missing");
+      }
 
       // Create mapping dictionary for quick lookup
       const mappingDict = mappings.reduce(
@@ -470,78 +571,211 @@ const Identifikacije = () => {
         {},
       );
 
-      // For simplicity, we'll just generate one document for the first data row
-      const row = rows[0];
-
-      if (!templateContent || !templateFile) {
-        throw new Error("Template file is missing");
-      }
-
       const zip = await loadAsync(templateContent);
 
-      // Special handling for telefon placeholders
-      const processPlaceholders = (content: string) => {
-        let newContent = content;
+      if (templateFile.name.endsWith(".docx")) {
+        // Handle DOCX format
+        const documentXml = await zip
+          .file("word/document.xml")!
+          .async("string");
 
-        // Process regular placeholders
-        placeholders.forEach((placeholder) => {
-          // Skip "Telefon" placeholder as we'll handle it specially
-          if (placeholder.toLowerCase().includes("telefon")) {
-            return;
-          }
+        // Find the main content section in the document
+        const bodyStartIndex = documentXml.indexOf("<w:body>");
+        const bodyEndIndex = documentXml.lastIndexOf("</w:body>");
 
-          const header = mappingDict[placeholder];
-          if (header && row[header] !== undefined) {
-            const regex = new RegExp(`\\{${placeholder}\\}`, "g");
-            newContent = newContent.replace(regex, row[header]);
-          }
-        });
-
-        // Special handling for Telefon placeholder
-        const telefonPlaceholders = placeholders.filter((p) =>
-          p.toLowerCase().includes("telefon"),
-        );
-
-        if (telefonPlaceholders.length > 0) {
-          // Find telefon headers
-          const telefonHeaders = telefonPlaceholders
-            .map((p) => mappingDict[p])
-            .filter((header) => header && row[header]);
-
-          // Get telefon values
-          const telefonValues = telefonHeaders
-            .map((header) => row[header])
-            .filter((value) => value && value.trim());
-
-          // Format telefon values
-          let telefonText = "";
-          if (telefonValues.length >= 2) {
-            telefonText = `${telefonValues[0]} / ${telefonValues[1]}`;
-          } else if (telefonValues.length === 1) {
-            telefonText = telefonValues[0];
-          }
-
-          // Replace all telefon placeholders with the combined value
-          telefonPlaceholders.forEach((placeholder) => {
-            const regex = new RegExp(`\\{${placeholder}\\}`, "g");
-            newContent = newContent.replace(regex, telefonText);
-          });
+        if (bodyStartIndex === -1 || bodyEndIndex === -1) {
+          throw new Error("Could not locate document body");
         }
 
-        return newContent;
-      };
+        const bodyPrefix = documentXml.substring(0, bodyStartIndex + 8); // include "<w:body>"
+        const bodySuffix = documentXml.substring(bodyEndIndex);
+        const templateBody = documentXml.substring(
+          bodyStartIndex + 8,
+          bodyEndIndex,
+        );
 
-      // Process based on file type
-      if (templateFile.name.endsWith(".docx")) {
-        // For DOCX
-        const contentXml = await zip.file("word/document.xml")!.async("string");
-        const newContent = processPlaceholders(contentXml);
-        zip.file("word/document.xml", newContent);
+        // Count placeholders in the template to know how many fit per page
+        const placeholderCount = {};
+        placeholders.forEach((placeholder) => {
+          const regex = new RegExp(`\\{${placeholder}\\}`, "g");
+          const matches = [...templateBody.matchAll(regex)];
+          placeholderCount[placeholder] = matches.length;
+        });
+
+        // Create a page break element for DOCX
+        const pageBreak = '<w:p><w:r><w:br w:type="page"/></w:r></w:p>';
+
+        let mergedBody = "";
+        let currentRowIndex = 0;
+
+        // Continue until all rows are processed
+        while (currentRowIndex < rows.length) {
+          // Make a copy of the template for this page
+          let currentPageContent = templateBody;
+          let placeholdersFilledOnThisPage = false;
+
+          // Process each placeholder type
+          for (const placeholder of placeholders) {
+            const regex = new RegExp(`\\{${placeholder}\\}`, "g");
+            const header = mappingDict[placeholder];
+
+            if (!header) continue;
+
+            // Find all instances of this placeholder in the current page
+            const matches = [...currentPageContent.matchAll(regex)];
+
+            // Replace each instance with data from the next available row
+            if (matches.length > 0) {
+              placeholdersFilledOnThisPage = true;
+
+              // Replace placeholders one by one with different rows
+              let tempContent = currentPageContent;
+              let lastIndex = 0;
+
+              for (let i = 0; i < matches.length; i++) {
+                if (currentRowIndex + i >= rows.length) break;
+
+                const match = matches[i];
+                const rowData = rows[currentRowIndex + i];
+                const value = placeholder.toLowerCase().includes("telefon")
+                  ? getFormattedTelefonValue(rowData, placeholder, mappingDict)
+                  : rowData[header] || "";
+
+                // Replace only this specific instance
+                const beforeMatch = tempContent.substring(
+                  0,
+                  match.index! + lastIndex,
+                );
+                const afterMatch = tempContent.substring(
+                  match.index! + match[0].length + lastIndex,
+                );
+                tempContent = beforeMatch + value + afterMatch;
+
+                // Adjust for the change in string length after replacement
+                lastIndex += value.length - match[0].length;
+              }
+
+              currentPageContent = tempContent;
+            }
+          }
+
+          // Add this page to the output
+          if (mergedBody.length > 0) {
+            mergedBody += pageBreak;
+          }
+          mergedBody += currentPageContent;
+
+          // Move to the next set of rows based on how many placeholders were filled
+          // If no placeholders were filled on this page, move forward by 1 to avoid infinite loop
+          currentRowIndex += placeholdersFilledOnThisPage
+            ? Math.max(
+                1,
+                Math.min(...(Object.values(placeholderCount) as number[])),
+              )
+            : 1;
+        }
+
+        // Combine everything back
+        const newDocumentXml = bodyPrefix + mergedBody + bodySuffix;
+        zip.file("word/document.xml", newDocumentXml);
       } else if (templateFile.name.endsWith(".odt")) {
-        // For ODT
+        // Similar approach for ODT
         const contentXml = await zip.file("content.xml")!.async("string");
-        const newContent = processPlaceholders(contentXml);
-        zip.file("content.xml", newContent);
+
+        const bodyStartIndex = contentXml.indexOf("<office:body>");
+        const textStartIndex = contentXml.indexOf(
+          "<office:text>",
+          bodyStartIndex,
+        );
+        const textEndIndex = contentXml.lastIndexOf("</office:text>");
+
+        if (
+          bodyStartIndex === -1 ||
+          textStartIndex === -1 ||
+          textEndIndex === -1
+        ) {
+          throw new Error("Could not locate document body");
+        }
+
+        const documentPrefix = contentXml.substring(0, textStartIndex + 13);
+        const documentSuffix = contentXml.substring(textEndIndex);
+        const templateContent = contentXml.substring(
+          textStartIndex + 13,
+          textEndIndex,
+        );
+
+        // Count placeholders in the template
+        const placeholderCount = {};
+        placeholders.forEach((placeholder) => {
+          const regex = new RegExp(`\\{${placeholder}\\}`, "g");
+          const matches = [...templateContent.matchAll(regex)];
+          placeholderCount[placeholder] = matches.length;
+        });
+
+        const pageBreak =
+          '<text:p text:style-name="Standard"><text:soft-page-break/></text:p>';
+
+        let mergedContent = "";
+        let currentRowIndex = 0;
+
+        while (currentRowIndex < rows.length) {
+          let currentPageContent = templateContent;
+          let placeholdersFilledOnThisPage = false;
+
+          for (const placeholder of placeholders) {
+            const regex = new RegExp(`\\{${placeholder}\\}`, "g");
+            const header = mappingDict[placeholder];
+
+            if (!header) continue;
+
+            const matches = [...currentPageContent.matchAll(regex)];
+
+            if (matches.length > 0) {
+              placeholdersFilledOnThisPage = true;
+
+              let tempContent = currentPageContent;
+              let lastIndex = 0;
+
+              for (let i = 0; i < matches.length; i++) {
+                if (currentRowIndex + i >= rows.length) break;
+
+                const match = matches[i];
+                const rowData = rows[currentRowIndex + i];
+                const value = placeholder.toLowerCase().includes("telefon")
+                  ? getFormattedTelefonValue(rowData, placeholder, mappingDict)
+                  : rowData[header] || "";
+
+                const beforeMatch = tempContent.substring(
+                  0,
+                  match.index! + lastIndex,
+                );
+                const afterMatch = tempContent.substring(
+                  match.index! + match[0].length + lastIndex,
+                );
+                tempContent = beforeMatch + value + afterMatch;
+
+                lastIndex += value.length - match[0].length;
+              }
+
+              currentPageContent = tempContent;
+            }
+          }
+
+          if (mergedContent.length > 0) {
+            mergedContent += pageBreak;
+          }
+          mergedContent += currentPageContent;
+
+          currentRowIndex += placeholdersFilledOnThisPage
+            ? Math.max(
+                1,
+                Math.min(...(Object.values(placeholderCount) as number[])),
+              )
+            : 1;
+        }
+
+        const newContentXml = documentPrefix + mergedContent + documentSuffix;
+        zip.file("content.xml", newContentXml);
       }
 
       // Generate and download the file
@@ -559,6 +793,32 @@ const Identifikacije = () => {
       setError(`Error generating document: ${err.message}`);
       setIsProcessing(false);
     }
+  };
+
+  // Helper function for telefon formatting
+  const getFormattedTelefonValue = (
+    row: Record<string, string>,
+    placeholder: string,
+    mappingDict: { [key: string]: string },
+  ) => {
+    const telefonPlaceholders = placeholders.filter((p) =>
+      p.toLowerCase().includes("telefon"),
+    );
+
+    const telefonHeaders = telefonPlaceholders
+      .map((p) => mappingDict[p])
+      .filter((header) => header && row[header]);
+
+    const telefonValues = telefonHeaders
+      .map((header) => row[header])
+      .filter((value) => value && value.trim());
+
+    if (telefonValues.length >= 2) {
+      return `${telefonValues[0]} / ${telefonValues[1]}`;
+    } else if (telefonValues.length === 1) {
+      return telefonValues[0];
+    }
+    return "";
   };
 
   // Handle pasting data
