@@ -543,7 +543,7 @@ const Identifikacije = () => {
         );
 
         // Count placeholders in the template to know how many fit per page
-        const placeholderCount = {};
+        const placeholderCount: Record<string, number> = {};
         placeholders.forEach((placeholder) => {
           const actualPlaceholder =
             placeholderMapping.get(placeholder) || `{${placeholder}}`;
