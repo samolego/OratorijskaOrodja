@@ -359,7 +359,7 @@ const Identifikacije = () => {
       setRows(extractedRows);
       setError("");
       return true;
-    } catch (err) {
+    } catch (err: any) {
       setError(
         "Failed to parse data. Please ensure it's properly formatted. " +
           err.message,
@@ -757,7 +757,7 @@ const Identifikacije = () => {
       document.body.removeChild(a);
 
       setIsProcessing(false);
-    } catch (err) {
+    } catch (err: any) {
       setError(`Error generating document: ${err.message}`);
       setIsProcessing(false);
     }
