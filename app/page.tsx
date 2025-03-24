@@ -77,7 +77,7 @@ export default function LandingPage() {
                 <CardFooter>
                   <Button className="w-full" asChild>
                     <Link href="/identifikacije">
-                      <span>Open Identifikacije</span>
+                      <span>Odpri identifikacije</span>
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                   </Button>
