@@ -379,7 +379,12 @@ const ReviewMappingsStep = ({
                   htmlFor="secondary-telefon"
                   className="block text-sm mb-1"
                 >
-                  Izberi sekundarno telefonsko polje:
+                  Izberi še drugo telefonsko polje:
+                  {specialPlaceholderSettings.telefon.secondaryField && (
+                    <span className="text-green-600 ml-2">
+                      (Samodejno izbrano polje)
+                    </span>
+                  )}
                 </label>
                 <select
                   id="secondary-telefon"
@@ -396,11 +401,19 @@ const ReviewMappingsStep = ({
                   }
                 >
                   <option value="">-- Izberi drugo polje --</option>
-                  {headers.map((header, i) => (
-                    <option key={i} value={header}>
-                      {header}
-                    </option>
-                  ))}
+                  {headers
+                    // Only show unassigned headers and the currently selected secondary
+                    .filter(
+                      (header) =>
+                        header ===
+                          specialPlaceholderSettings.telefon.secondaryField ||
+                        !mappings.some((m) => m.header === header),
+                    )
+                    .map((header, i) => (
+                      <option key={i} value={header}>
+                        {header}
+                      </option>
+                    ))}
                 </select>
               </div>
             )}
@@ -662,6 +675,68 @@ const Identifikacije = () => {
           similarity: bestScore,
         };
       });
+
+      const telefonPlaceholders = extractedPlaceholders.filter((placeholder) =>
+        placeholder.toLowerCase().includes("telefon"),
+      );
+
+      // If we have telefon placeholders, try to find a secondary field
+      if (telefonPlaceholders.length > 0) {
+        // Get the headers that are already assigned as primary
+        const assignedHeaders = initialMappings
+          .filter((m) => m.header) // Only consider mappings with assigned headers
+          .map((m) => m.header);
+
+        // Find available headers (not yet assigned)
+        const availableHeaders = headers.filter(
+          (header) => !assignedHeaders.includes(header),
+        );
+
+        // Look for a header that might be a good secondary telefon field
+        let bestSecondaryHeader = "";
+        let bestScore = 0;
+
+        availableHeaders.forEach((header) => {
+          // Try to find headers with "telefon", "mobile", "gsm", "cell" etc.
+          const keywords = ["telefon", "tel", "mobile", "mobil", "gsm", "cell"];
+
+          // Check if header contains any of the keywords
+          const containsKeyword = keywords.some((keyword) =>
+            header.toLowerCase().includes(keyword),
+          );
+
+          if (containsKeyword) {
+            const score = 0.8; // High score for keyword match
+
+            if (score > bestScore) {
+              bestScore = score;
+              bestSecondaryHeader = header;
+            }
+          } else {
+            // For non-keyword headers, use string similarity but with lower weight
+            telefonPlaceholders.forEach((placeholder) => {
+              const score = stringSimilarity(placeholder, header) * 0.7; // 70% weight
+
+              if (score > bestScore) {
+                bestScore = score;
+                bestSecondaryHeader = header;
+              }
+            });
+          }
+        });
+
+        // If we found a good secondary field and the score is decent
+        if (bestSecondaryHeader && bestScore > 0.4) {
+          // Enable telefon special handling and set the secondary field
+          setSpecialPlaceholderSettings((prev) => ({
+            ...prev,
+            telefon: {
+              enabled: true,
+              secondaryField: bestSecondaryHeader,
+            },
+          }));
+        }
+      }
 
       setMappings(initialMappings);
       setActiveStep("review");
