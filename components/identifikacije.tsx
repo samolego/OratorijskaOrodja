@@ -259,6 +259,8 @@ const ReviewMappingsStep = ({
   generateDocuments,
   isProcessing,
   error,
+  specialPlaceholderSettings,
+  setSpecialPlaceholderSettings,
 }: {
   mappings: Mapping[];
   headers: string[];
@@ -266,7 +268,21 @@ const ReviewMappingsStep = ({
   generateDocuments: () => void;
   isProcessing: boolean;
   error: string;
+  specialPlaceholderSettings: {
+    razred: { enabled: boolean };
+    telefon: { enabled: boolean; secondaryField: string };
+  };
+  setSpecialPlaceholderSettings: (settings: any) => void;
 }) => {
+  // Check if we have any razred or telefon placeholders
+  const hasRazredPlaceholder = mappings.some((m) =>
+    m.placeholder.toLowerCase().includes("razred"),
+  );
+
+  const hasTelefonPlaceholder = mappings.some((m) =>
+    m.placeholder.toLowerCase().includes("telefon"),
+  );
+
   return (
     <div className="space-y-2">
       <h3 className="font-medium">Pregled preslikav polj</h3>
@@ -303,6 +319,59 @@ const ReviewMappingsStep = ({
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Special placeholder settings */}
+      <div className="border rounded-md p-4 mt-4">
+        <h4 className="font-medium mb-2">Posebne nastavitve oznak</h4>
+
+        {hasRazredPlaceholder && (
+          <div className="flex items-center py-2">
+            <input
+              type="checkbox"
+              id="special-razred"
+              className="mr-2"
+              checked={specialPlaceholderSettings.razred.enabled}
+              onChange={(e) =>
+                setSpecialPlaceholderSettings({
+                  ...specialPlaceholderSettings,
+                  razred: {
+                    ...specialPlaceholderSettings.razred,
+                    enabled: e.target.checked,
+                  },
+                })
+              }
+            />
+            <label htmlFor="special-razred">
+              Upoštevaj razred kot posebno oznako (0 = {"Predšolski"}, ostalo =
+              {"X. razred"})
+            </label>
+          </div>
+        )}
+
+        {hasTelefonPlaceholder && (
+          <div className="flex items-center py-2">
+            <input
+              type="checkbox"
+              id="special-telefon"
+              className="mr-2"
+              checked={specialPlaceholderSettings.telefon.enabled}
+              onChange={(e) =>
+                setSpecialPlaceholderSettings({
+                  ...specialPlaceholderSettings,
+                  telefon: {
+                    ...specialPlaceholderSettings.telefon,
+                    enabled: e.target.checked,
+                  },
+                })
+              }
+            />
+            <label htmlFor="special-telefon">
+              Upoštevaj telefon kot posebno oznako (združi več telefonskih
+              številk)
+            </label>
+          </div>
+        )}
       </div>
 
       <ErrorAlert error={error} />
@@ -343,6 +412,15 @@ const Identifikacije = () => {
   const [placeholderMapping, setPlaceholderMapping] = useState<
     Map<string, string>
   >(new Map());
+  const [specialPlaceholderSettings, setSpecialPlaceholderSettings] = useState({
+    razred: {
+      enabled: false,
+    },
+    telefon: {
+      enabled: false,
+      secondaryField: "",
+    },
+  });
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState("");
 
@@ -468,7 +546,7 @@ const Identifikacije = () => {
 
           // For each opening brace, find the matching closing brace
           // accounting for XML tags in between
-          for (let pos of openBracePositions) {
+          for (const pos of openBracePositions) {
             let bracketCount = 1;
             let endPos = -1;
 
@@ -487,7 +565,7 @@ const Identifikacije = () => {
               const fullPlaceholder = normalizedXml.substring(pos, endPos + 1);
 
               // Extract text content by removing all XML tags
-              let textContent = fullPlaceholder
+              const textContent = fullPlaceholder
                 .replace(/<[^>]*>/g, "") // Remove all XML tags
                 .replace(/\{|\}/g, ""); // Remove braces
 
@@ -671,17 +749,40 @@ const Identifikacije = () => {
 
                 const match = matches[i];
                 const rowData = rows[currentRowIndex + i];
-                let value = rowData[header] || "";
 
-                // Apply casing only if it's not a telephone field
-                if (!placeholder.toLowerCase().includes("telefon")) {
-                  value = applyPlaceholderCasing(value, placeholder);
-                } else {
+                let value = "";
+
+                // Handle razred special case
+                if (
+                  specialPlaceholderSettings.razred.enabled &&
+                  placeholder.toLowerCase().includes("razred")
+                ) {
+                  value = getFormattedRazredValue(rowData[header] || "");
+                }
+                // Handle telefon special case
+                else if (
+                  specialPlaceholderSettings.telefon.enabled &&
+                  placeholder.toLowerCase().includes("telefon")
+                ) {
                   value = getFormattedTelefonValue(
                     rowData,
                     placeholder,
                     mappingDict,
                   );
+                }
+                // Normal case
+                else {
+                  value = rowData[header] || "";
+
+                  // Apply casing only for non-special fields or when special handling is disabled
+                  if (
+                    (!placeholder.toLowerCase().includes("razred") ||
+                      !specialPlaceholderSettings.razred.enabled) &&
+                    (!placeholder.toLowerCase().includes("telefon") ||
+                      !specialPlaceholderSettings.telefon.enabled)
+                  ) {
+                    value = applyPlaceholderCasing(value, placeholder);
+                  }
                 }
 
                 // Replace only this specific instance
@@ -799,17 +900,39 @@ const Identifikacije = () => {
                 const match = matches[i];
                 const rowData = rows[currentRowIndex + i];
 
-                let value = rowData[header] || "";
+                let value = "";
 
-                // Apply casing only if it's not a telephone field
-                if (!placeholder.toLowerCase().includes("telefon")) {
-                  value = applyPlaceholderCasing(value, placeholder);
-                } else {
+                // Handle razred special case
+                if (
+                  specialPlaceholderSettings.razred.enabled &&
+                  placeholder.toLowerCase().includes("razred")
+                ) {
+                  value = getFormattedRazredValue(rowData[header] || "");
+                }
+                // Handle telefon special case
+                else if (
+                  specialPlaceholderSettings.telefon.enabled &&
+                  placeholder.toLowerCase().includes("telefon")
+                ) {
                   value = getFormattedTelefonValue(
                     rowData,
                     placeholder,
                     mappingDict,
                   );
+                }
+                // Normal case
+                else {
+                  value = rowData[header] || "";
+
+                  // Apply casing only for non-special fields or when special handling is disabled
+                  if (
+                    (!placeholder.toLowerCase().includes("razred") ||
+                      !specialPlaceholderSettings.razred.enabled) &&
+                    (!placeholder.toLowerCase().includes("telefon") ||
+                      !specialPlaceholderSettings.telefon.enabled)
+                  ) {
+                    value = applyPlaceholderCasing(value, placeholder);
+                  }
                 }
 
                 const beforeMatch = tempContent.substring(
@@ -887,6 +1010,22 @@ const Identifikacije = () => {
     return "";
   };
 
+  const getFormattedRazredValue = (value: string) => {
+    if (!value || value.trim() === "") return "";
+
+    // Try to parse as a number
+    const numValue = parseInt(value.trim(), 10);
+
+    // Check if it's a valid number
+    if (isNaN(numValue)) return value;
+
+    // Special case for 0
+    if (numValue === 0) return "Predšolski";
+
+    // Format as "X. razred"
+    return `${numValue}. razred`;
+  };
+
   // Handle pasting data
   const handlePaste = () => {
     const success = parseSheetData();
@@ -943,6 +1082,8 @@ const Identifikacije = () => {
                 generateDocuments={generateDocuments}
                 isProcessing={isProcessing}
                 error={error}
+                specialPlaceholderSettings={specialPlaceholderSettings}
+                setSpecialPlaceholderSettings={setSpecialPlaceholderSettings}
               />
             </TabsContent>
           </Tabs>
