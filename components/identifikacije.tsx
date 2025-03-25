@@ -343,7 +343,7 @@ const ReviewMappingsStep = ({
               }
             />
             <label htmlFor="special-razred">
-              Upoštevaj razred kot posebno oznako (0 = {"Predšolski"}, ostalo =
+              Upoštevaj razred kot posebno oznako (0 = {"Predšolski"}, ostalo ={" "}
               {"X. razred"})
             </label>
           </div>
