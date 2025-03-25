@@ -350,26 +350,60 @@ const ReviewMappingsStep = ({
         )}
 
         {hasTelefonPlaceholder && (
-          <div className="flex items-center py-2">
-            <input
-              type="checkbox"
-              id="special-telefon"
-              className="mr-2"
-              checked={specialPlaceholderSettings.telefon.enabled}
-              onChange={(e) =>
-                setSpecialPlaceholderSettings({
-                  ...specialPlaceholderSettings,
-                  telefon: {
-                    ...specialPlaceholderSettings.telefon,
-                    enabled: e.target.checked,
-                  },
-                })
-              }
-            />
-            <label htmlFor="special-telefon">
-              Upoštevaj telefon kot posebno oznako (združi več telefonskih
-              številk)
-            </label>
+          <div className="space-y-2 py-2">
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                id="special-telefon"
+                className="mr-2"
+                checked={specialPlaceholderSettings.telefon.enabled}
+                onChange={(e) =>
+                  setSpecialPlaceholderSettings({
+                    ...specialPlaceholderSettings,
+                    telefon: {
+                      ...specialPlaceholderSettings.telefon,
+                      enabled: e.target.checked,
+                    },
+                  })
+                }
+              />
+              <label htmlFor="special-telefon">
+                Upoštevaj telefon kot posebno oznako (združi več telefonskih
+                številk)
+              </label>
+            </div>
+
+            {specialPlaceholderSettings.telefon.enabled && (
+              <div className="ml-6 mt-2">
+                <label
+                  htmlFor="secondary-telefon"
+                  className="block text-sm mb-1"
+                >
+                  Izberi sekundarno telefonsko polje:
+                </label>
+                <select
+                  id="secondary-telefon"
+                  className="w-full p-2 border rounded-md"
+                  value={specialPlaceholderSettings.telefon.secondaryField}
+                  onChange={(e) =>
+                    setSpecialPlaceholderSettings({
+                      ...specialPlaceholderSettings,
+                      telefon: {
+                        ...specialPlaceholderSettings.telefon,
+                        secondaryField: e.target.value,
+                      },
+                    })
+                  }
+                >
+                  <option value="">-- Izberi drugo polje --</option>
+                  {headers.map((header, i) => (
+                    <option key={i} value={header}>
+                      {header}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -414,10 +448,10 @@ const Identifikacije = () => {
   >(new Map());
   const [specialPlaceholderSettings, setSpecialPlaceholderSettings] = useState({
     razred: {
-      enabled: false,
+      enabled: true,
     },
     telefon: {
-      enabled: false,
+      enabled: true,
       secondaryField: "",
     },
   });
@@ -768,6 +802,7 @@ const Identifikacije = () => {
                     rowData,
                     placeholder,
                     mappingDict,
+                    specialPlaceholderSettings.telefon.secondaryField,
                   );
                 }
                 // Normal case
@@ -918,6 +953,7 @@ const Identifikacije = () => {
                     rowData,
                     placeholder,
                     mappingDict,
+                    specialPlaceholderSettings.telefon.secondaryField,
                   );
                 }
                 // Normal case
@@ -984,29 +1020,36 @@ const Identifikacije = () => {
       setIsProcessing(false);
     }
   };
+
   // Helper function for telefon formatting
   const getFormattedTelefonValue = (
     row: Record<string, string>,
     placeholder: string,
     mappingDict: { [key: string]: string },
+    secondaryField: string,
   ) => {
-    const telefonPlaceholders = placeholders.filter((p) =>
-      p.toLowerCase().includes("telefon"),
-    );
-
-    const telefonHeaders = telefonPlaceholders
-      .map((p) => mappingDict[p])
-      .filter((header) => header && row[header]);
-
-    const telefonValues = telefonHeaders
-      .map((header) => row[header])
-      .filter((value) => value && value.trim());
-
-    if (telefonValues.length >= 2) {
-      return `${telefonValues[0]} / ${telefonValues[1]}`;
-    } else if (telefonValues.length === 1) {
-      return telefonValues[0];
+    // If special handling is disabled or no secondary field is selected, just return the primary value
+    if (!secondaryField) {
+      const header = mappingDict[placeholder];
+      return header ? row[header] || "" : "";
     }
+
+    // Get primary value (from the current placeholder's mapping)
+    const primaryHeader = mappingDict[placeholder];
+    const primaryValue = primaryHeader ? row[primaryHeader] || "" : "";
+
+    // Get secondary value (from the selected secondary field)
+    const secondaryValue = row[secondaryField] || "";
+
+    // Format based on available values
+    if (primaryValue && secondaryValue) {
+      return `${primaryValue} / ${secondaryValue}`;
+    } else if (primaryValue) {
+      return primaryValue;
+    } else if (secondaryValue) {
+      return secondaryValue;
+    }
+
     return "";
   };
 
