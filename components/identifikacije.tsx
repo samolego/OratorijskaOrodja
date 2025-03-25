@@ -111,6 +111,26 @@ const stringSimilarity = (str1: string, str2: string) => {
   return 0.3 + rawScore * 0.2;
 };
 
+// Add this utility function at the top with the other utility functions
+const applyPlaceholderCasing = (value: string, placeholder: string) => {
+  // Check if placeholder is all uppercase
+  if (placeholder === placeholder.toUpperCase()) {
+    return value.toUpperCase();
+  }
+  // Check if placeholder has first letter uppercase (Title Case)
+  else if (
+    placeholder.length > 0 &&
+    placeholder[0] === placeholder[0].toUpperCase() &&
+    placeholder.slice(1) === placeholder.slice(1).toLowerCase()
+  ) {
+    return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
+  }
+  // Default to lowercase
+  else {
+    return value.toLowerCase();
+  }
+};
+
 // Components
 const ErrorAlert = ({ error }: { error: string }) => {
   if (!error) return null;
@@ -434,13 +454,63 @@ const Identifikacije = () => {
             .file("content.xml")!
             .async("string");
 
-          // ODT placeholders are simpler
-          const regex = /\{([^{}]+)\}/g;
-          const matches = [...documentContent.matchAll(regex)];
+          // First, normalize XML by removing line breaks
+          const normalizedXml = documentContent.replace(/\s+/g, " ");
 
-          for (const match of matches) {
-            const placeholder = match[1];
-            placeholderMap.set(placeholder, `{${placeholder}}`);
+          // Handle both simple and complex placeholders
+          // First, look for opening braces
+          const openBracePositions: number[] = [];
+          for (let i = 0; i < normalizedXml.length; i++) {
+            if (normalizedXml[i] === "{") {
+              openBracePositions.push(i);
+            }
+          }
+
+          // For each opening brace, find the matching closing brace
+          // accounting for XML tags in between
+          for (let pos of openBracePositions) {
+            let bracketCount = 1;
+            let endPos = -1;
+
+            for (let i = pos + 1; i < normalizedXml.length; i++) {
+              if (normalizedXml[i] === "{") bracketCount++;
+              if (normalizedXml[i] === "}") bracketCount--;
+
+              if (bracketCount === 0) {
+                endPos = i;
+                break;
+              }
+            }
+
+            if (endPos > pos) {
+              // Extract the full placeholder with XML
+              const fullPlaceholder = normalizedXml.substring(pos, endPos + 1);
+
+              // Extract text content by removing all XML tags
+              let textContent = fullPlaceholder
+                .replace(/<[^>]*>/g, "") // Remove all XML tags
+                .replace(/\{|\}/g, ""); // Remove braces
+
+              console.log("Found placeholder:", {
+                fullPlaceholder,
+                textContent,
+              });
+
+              if (textContent) {
+                placeholderMap.set(textContent, fullPlaceholder);
+              }
+            }
+          }
+
+          // Also add simpler regex-based detection as fallback
+          const regex = /\{([^{}]+)\}/g;
+          const simpleMatches = [...normalizedXml.matchAll(regex)];
+
+          for (const match of simpleMatches) {
+            const placeholder = match[1].replace(/<[^>]*>/g, ""); // Remove any XML tags
+            if (placeholder && !placeholderMap.has(placeholder)) {
+              placeholderMap.set(placeholder, `{${placeholder}}`);
+            }
           }
         }
       }
@@ -601,9 +671,18 @@ const Identifikacije = () => {
 
                 const match = matches[i];
                 const rowData = rows[currentRowIndex + i];
-                const value = placeholder.toLowerCase().includes("telefon")
-                  ? getFormattedTelefonValue(rowData, placeholder, mappingDict)
-                  : rowData[header] || "";
+                let value = rowData[header] || "";
+
+                // Apply casing only if it's not a telephone field
+                if (!placeholder.toLowerCase().includes("telefon")) {
+                  value = applyPlaceholderCasing(value, placeholder);
+                } else {
+                  value = getFormattedTelefonValue(
+                    rowData,
+                    placeholder,
+                    mappingDict,
+                  );
+                }
 
                 // Replace only this specific instance
                 const beforeMatch = tempContent.substring(
@@ -690,8 +769,18 @@ const Identifikacije = () => {
           let currentPageContent = templateContent;
           let placeholdersFilledOnThisPage = false;
 
+          // With:
           for (const placeholder of placeholders) {
-            const regex = new RegExp(`\\{${placeholder}\\}`, "g");
+            const actualPlaceholder =
+              placeholderMapping.get(placeholder) || `{${placeholder}}`;
+
+            // Escape special regex characters in the actualPlaceholder
+            const escapedPlaceholder = actualPlaceholder.replace(
+              /[.*+?^${}()|[\]\\]/g,
+              "\\$&",
+            );
+
+            const regex = new RegExp(escapedPlaceholder, "g");
             const header = mappingDict[placeholder];
 
             if (!header) continue;
@@ -709,9 +798,19 @@ const Identifikacije = () => {
 
                 const match = matches[i];
                 const rowData = rows[currentRowIndex + i];
-                const value = placeholder.toLowerCase().includes("telefon")
-                  ? getFormattedTelefonValue(rowData, placeholder, mappingDict)
-                  : rowData[header] || "";
+
+                let value = rowData[header] || "";
+
+                // Apply casing only if it's not a telephone field
+                if (!placeholder.toLowerCase().includes("telefon")) {
+                  value = applyPlaceholderCasing(value, placeholder);
+                } else {
+                  value = getFormattedTelefonValue(
+                    rowData,
+                    placeholder,
+                    mappingDict,
+                  );
+                }
 
                 const beforeMatch = tempContent.substring(
                   0,
@@ -800,7 +899,7 @@ const Identifikacije = () => {
     <div className="container mx-auto p-4 max-w-4xl">
       <Card className="mb-8">
         <CardHeader>
-          <CardTitle className="text-2xl">Identifikacije Tool</CardTitle>
+          <CardTitle className="text-2xl">Orodje za identifikacije</CardTitle>
           <CardDescription>
             Ustvari identifikacije iz podatkov v tabeli.
           </CardDescription>

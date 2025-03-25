@@ -106,7 +106,7 @@ function SidebarNav({ closeMenu }: SidebarNavProps) {
     {
       icon: <Mail className="mr-2 h-4 w-4" />,
       href: "/identifikacije",
-      label: "Identifikacije Tool",
+      label: "Orodje za identifikacije",
     },
     {
       icon: <QrCode className="mr-2 h-4 w-4" />,

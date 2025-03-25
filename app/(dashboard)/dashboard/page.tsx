@@ -19,7 +19,7 @@ export default function DashboardPage() {
           <CardHeader>
             <div className="flex items-center gap-2">
               <Mail className="h-5 w-5" />
-              <CardTitle>Identifikacije Tool</CardTitle>
+              <CardTitle>Orodje za identifikacije</CardTitle>
             </div>
           </CardHeader>
           <CardContent>
