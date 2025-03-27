@@ -123,7 +123,10 @@ const applyPlaceholderCasing = (value: string, placeholder: string) => {
     placeholder[0] === placeholder[0].toUpperCase() &&
     placeholder.slice(1) === placeholder.slice(1).toLowerCase()
   ) {
-    return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
+    return value
+      .split(" ")
+      .map((v) => v.charAt(0).toUpperCase() + v.slice(1).toLowerCase())
+      .join(" ");
   }
   // Default to lowercase
   else {
