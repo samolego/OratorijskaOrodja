@@ -25,7 +25,7 @@ export default function DashboardLayout({
             onClick={() => setMobileMenuOpen(false)}
           >
             <Home className="h-5 w-5" />
-            <span>Oratorij Toolkit</span>
+            <span>Oratorijska orodja</span>
           </Link>
         </div>
         <nav className="flex-1 p-4">
@@ -55,7 +55,7 @@ export default function DashboardLayout({
             onClick={() => setMobileMenuOpen(false)}
           >
             <Home className="h-5 w-5" />
-            <span>Oratorij Toolkit</span>
+            <span>Oratorijska orodja</span>
           </Link>
           <Button
             variant="ghost"
@@ -76,7 +76,7 @@ export default function DashboardLayout({
         <header className="md:hidden border-b p-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 font-bold text-xl">
             <Home className="h-5 w-5" />
-            <span>Oratorij Toolkit</span>
+            <span>Oratorijska orodja</span>
           </Link>
 
           <Button

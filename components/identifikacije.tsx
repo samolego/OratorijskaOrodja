@@ -192,20 +192,65 @@ const UploadTemplateStep = ({
   handleFileUpload,
   templateFile,
   isProcessing,
+  setIsProcessing,
+  setError,
   error,
 }: {
   handleFileUpload: (file: File) => void;
   templateFile: File | null;
   isProcessing: boolean;
+  setIsProcessing: (value: boolean) => void;
+  setError: (value: string) => void;
   error: string;
 }) => {
+  const useSampleTemplate = async () => {
+    try {
+      setIsProcessing(true);
+      setError("");
+
+      const response = await fetch("/template.odt");
+      if (!response.ok) {
+        throw new Error("Failed to fetch sample template");
+      }
+
+      const blob = await response.blob();
+      const file = new File([blob], "template.odt", {
+        type: "application/vnd.oasis.opendocument.text",
+      });
+
+      handleFileUpload(file);
+    } catch (err: any) {
+      setError(`Error loading sample template: ${err.message}`);
+      setIsProcessing(false);
+    }
+  };
+
   return (
     <div className="space-y-2">
       <h3 className="font-medium">Naloži predlogo</h3>
-      <p className="text-sm text-gray-500">
-        Naloži dokument DOCX ali ODT z oznakami v stilu {"{oznaka}"} (npr:
-        {"{ime}"}).
-      </p>
+      <div className="flex justify-between items-center mb-4">
+        <p className="text-sm text-gray-500">
+          Naloži dokument DOCX ali ODT z oznakami v stilu <b>{"{oznaka}"}</b> ,
+          denimo <b>{"{ime}"}</b>, <b>{"{Priimek}"}</b>, <b>{"{SKUPINA}"}</b>{" "}
+          itd.
+        </p>
+
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            const link = document.createElement("a");
+            link.href = "/template.odt";
+            link.download = "template.odt";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+          }}
+        >
+          <FileText className="mr-2 h-4 w-4" />
+          Prenesi vzorčno predlogo
+        </Button>
+      </div>
 
       <div className="border-2 border-dashed rounded-md p-8 text-center">
         <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
@@ -240,6 +285,11 @@ const UploadTemplateStep = ({
           )}
         </Button>
       </div>
+      <p className="text-sm text-gray-500 mt-4">
+        Namig: oznake bodo upoštevale tudi velike / male začetnice. Npr.{" "}
+        {"{IME}"}, {"{ime}"} in {"{Ime}"} bodo dali rezultatet <i>REBEKA</i>,{" "}
+        <i>rebeka</i>, <i>Rebeka</i>.
+      </p>
 
       {templateFile && (
         <div className="bg-green-50 p-4 rounded-md flex items-center">
@@ -249,6 +299,28 @@ const UploadTemplateStep = ({
           </span>
         </div>
       )}
+      <div className="mt-4 text-center">
+        <div className="mb-2 text-sm text-gray-500">
+          Ali pa uporabi našo vzorčno predlogo:
+        </div>
+        <Button
+          variant="secondary"
+          onClick={useSampleTemplate}
+          disabled={isProcessing}
+        >
+          {isProcessing ? (
+            <>
+              <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+              Obdelava ...
+            </>
+          ) : (
+            <>
+              <CheckCircle className="mr-2 h-4 w-4" />
+              Uporabi vzorčno predlogo
+            </>
+          )}
+        </Button>
+      </div>
 
       <ErrorAlert error={error} />
     </div>
@@ -1191,6 +1263,8 @@ const Identifikacije = () => {
                 handleFileUpload={handleFileUpload}
                 templateFile={templateFile}
                 isProcessing={isProcessing}
+                setIsProcessing={setIsProcessing}
+                setError={setError}
                 error={error}
               />
             </TabsContent>

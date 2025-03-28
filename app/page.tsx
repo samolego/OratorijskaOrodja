@@ -15,13 +15,13 @@ export default function LandingPage() {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Header */}
-      <header className="border-b">
-        <div className="container flex h-16 items-center px-4 sm:px-8">
+      <header className="border-b w-full">
+        <div className="container max-w-7xl mx-auto flex h-16 items-center justify-between px-4 sm:px-8 w-full">
           <div className="flex items-center gap-2 font-bold text-xl">
             <Rocket className="h-5 w-5" />
-            <span>Oratorij Toolkit</span>
+            <span>Oratorijska orodja</span>
           </div>
-          <div className="ml-auto flex items-center gap-4">
+          <div className="flex items-center gap-4">
             <Button variant="ghost" asChild>
               <Link href="/about">About</Link>
             </Button>
@@ -34,7 +34,7 @@ export default function LandingPage() {
 
       {/* Hero Section */}
       <section className="flex-1">
-        <div className="container px-4 sm:px-8 py-12 md:py-24 lg:py-32">
+        <div className="container max-w-7xl mx-auto px-4 sm:px-8 py-12 md:py-24 lg:py-32">
           <div className="mx-auto max-w-3xl space-y-8 text-center">
             <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl">
               Oratorijska orodja
@@ -48,7 +48,7 @@ export default function LandingPage() {
 
       {/* Features */}
       <section className="border-t bg-muted/40">
-        <div className="container px-4 sm:px-8 py-12 md:py-24">
+        <div className="container max-w-7xl mx-auto px-4 sm:px-8 py-12 md:py-24">
           <div className="mx-auto max-w-6xl">
             <h2 className="text-3xl font-bold tracking-tighter text-center mb-12">
               Orodja, ki so na voljo
@@ -117,10 +117,10 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="border-t">
-        <div className="container flex flex-col md:flex-row items-center justify-between px-4 sm:px-8 py-8">
+        <div className="container max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between px-4 sm:px-8 py-8">
           <div className="flex items-center gap-2 font-medium">
             <Rocket className="h-4 w-4" />
-            <span>Oratorij Toolkit</span>
+            <span>Oratorijska orodja</span>
           </div>
           <div className="text-center md:text-left text-sm text-muted-foreground mt-4 md:mt-0">
             © {new Date().getFullYear()} Oratorij Grosuplje.
