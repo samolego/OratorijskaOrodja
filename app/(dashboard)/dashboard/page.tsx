@@ -12,7 +12,7 @@ import { Mail, QrCode, ArrowRight } from "lucide-react";
 export default function DashboardPage() {
   return (
     <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
+      <h1 className="text-3xl font-bold mb-8">Pregled</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
@@ -23,7 +23,7 @@ export default function DashboardPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <p>Generate personalized emails and documents.</p>
+            <p>Ustvari personalizirane dokumente.</p>
           </CardContent>
           <CardFooter>
             <Button asChild>
@@ -42,7 +42,7 @@ export default function DashboardPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <p>Create QR codes for events and resources.</p>
+            <p>Ustvari kode QR za povezave.</p>
           </CardContent>
           <CardFooter>
             <Button asChild>
