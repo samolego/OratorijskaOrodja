@@ -1,6 +1,6 @@
 import { useState } from "react";
 import JSZip from "jszip";
-import { Mapping } from "../types";
+import { getErrorMessage, Mapping } from "../types";
 import { stringSimilarity } from "../utils";
 
 export const useFileProcessing = (
@@ -241,8 +241,8 @@ export const useFileProcessing = (
       setMappings(initialMappings);
       setActiveStep("review");
       setIsProcessing(false);
-    } catch (err: any) {
-      setError(`Error processing file: ${err.message}`);
+    } catch (err: unknown) {
+      setError(`Error processing file: ${getErrorMessage(err)}`);
       setIsProcessing(false);
     }
   };
