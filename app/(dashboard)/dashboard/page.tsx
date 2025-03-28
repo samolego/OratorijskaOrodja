@@ -28,7 +28,7 @@ export default function DashboardPage() {
           <CardFooter>
             <Button asChild>
               <Link href="/identifikacije">
-                Odrpi <ArrowRight className="ml-2 h-4 w-4" />
+                Odpri <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
           </CardFooter>
@@ -47,7 +47,7 @@ export default function DashboardPage() {
           <CardFooter>
             <Button asChild>
               <Link href="/qr-code">
-                Odrpi <ArrowRight className="ml-2 h-4 w-4" />
+                Odpri <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
           </CardFooter>
