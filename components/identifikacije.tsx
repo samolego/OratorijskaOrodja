@@ -302,7 +302,7 @@ const UploadTemplateStep = ({
           </Button>
         </div>
 
-        {/* Option 2: Use sample template (NOW SECOND) */}
+        {/* Option 2: Use sample template */}
         <div className="border rounded-lg p-5 bg-white hover:bg-gray-50 transition-colors flex flex-col h-full">
           <div>
             <h4 className="font-medium mb-2 flex items-center">
@@ -1308,11 +1308,25 @@ const Identifikacije = () => {
         <CardContent>
           <Tabs value={activeStep} className="w-full">
             <TabsList className="grid w-full grid-cols-3 mb-8">
-              <TabsTrigger value="paste">1. Prilepi podatke</TabsTrigger>
-              <TabsTrigger value="upload" disabled={headers.length === 0}>
+              <TabsTrigger value="paste" onClick={() => setActiveStep("paste")}>
+                1. Prilepi podatke
+              </TabsTrigger>
+              <TabsTrigger
+                value="upload"
+                disabled={headers.length === 0}
+                onClick={() =>
+                  headers.length > 0 ? setActiveStep("upload") : null
+                }
+              >
                 2. Naloži predlogo
               </TabsTrigger>
-              <TabsTrigger value="review" disabled={!templateContent}>
+              <TabsTrigger
+                value="review"
+                disabled={!templateContent}
+                onClick={() =>
+                  templateContent ? setActiveStep("review") : null
+                }
+              >
                 3. Preveri in ustvari
               </TabsTrigger>
             </TabsList>
