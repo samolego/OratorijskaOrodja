@@ -25,12 +25,15 @@ export const UploadTemplateStep = ({
   setError: (value: string) => void;
   error: string;
 }) => {
+  const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
+  const templatePath = `${basePath}/template.odt`;
+
   const useSampleTemplate = async () => {
     try {
       setIsProcessing(true);
       setError("");
 
-      const response = await fetch("/template.odt");
+      const response = await fetch(templatePath);
       if (!response.ok) {
         throw new Error("Failed to fetch sample template");
       }
@@ -42,7 +45,9 @@ export const UploadTemplateStep = ({
 
       handleFileUpload(file);
     } catch (err: unknown) {
-      setError(`Error loading sample template: ${getErrorMessage(err)}`);
+      setError(
+        `Napaka pri nalaganju privzete predloge: ${getErrorMessage(err)}`,
+      );
       setIsProcessing(false);
     }
   };
@@ -149,7 +154,7 @@ export const UploadTemplateStep = ({
                 className="text-xs text-gray-500"
                 onClick={() => {
                   const link = document.createElement("a");
-                  link.href = "/template.odt";
+                  link.href = templatePath;
                   link.download = "template.odt";
                   document.body.appendChild(link);
                   link.click();
