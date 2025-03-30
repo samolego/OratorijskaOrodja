@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Mail, QrCode, Home, Menu, X } from "lucide-react";
+import { Contact, QrCode, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import OratorijIcon from "@/components/icons/oratorij";
 
 export default function DashboardLayout({
   children,
@@ -24,7 +25,7 @@ export default function DashboardLayout({
             className="flex items-center gap-2 font-bold text-xl"
             onClick={() => setMobileMenuOpen(false)}
           >
-            <Home className="h-5 w-5" />
+            <OratorijIcon className="h-8 w-8" />
             <span>Oratorijska orodja</span>
           </Link>
         </div>
@@ -54,7 +55,7 @@ export default function DashboardLayout({
             className="flex items-center gap-2 font-bold text-xl"
             onClick={() => setMobileMenuOpen(false)}
           >
-            <Home className="h-5 w-5" />
+            <OratorijIcon className="h-8 w-8" />
             <span>Oratorijska orodja</span>
           </Link>
           <Button
@@ -75,7 +76,7 @@ export default function DashboardLayout({
         {/* Mobile Header */}
         <header className="md:hidden border-b p-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 font-bold text-xl">
-            <Home className="h-5 w-5" />
+            <OratorijIcon className="h-8 w-8" />
             <span>Oratorijska orodja</span>
           </Link>
 
@@ -104,7 +105,7 @@ function SidebarNav({ closeMenu }: SidebarNavProps) {
 
   const routes = [
     {
-      icon: <Mail className="mr-2 h-4 w-4" />,
+      icon: <Contact className="mr-2 h-4 w-4" />,
       href: "/identifikacije",
       label: "Orodje za identifikacije",
     },

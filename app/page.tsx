@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Mail, QrCode, ArrowRight, Rocket } from "lucide-react";
+import { Contact, QrCode, ArrowRight, Rocket } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -10,6 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import OratorijIcon from "@/components/icons/oratorij";
 
 export default function LandingPage() {
   return (
@@ -18,15 +19,20 @@ export default function LandingPage() {
       <header className="border-b w-full">
         <div className="container max-w-7xl mx-auto flex h-16 items-center justify-between px-4 sm:px-8 w-full">
           <div className="flex items-center gap-2 font-bold text-xl">
-            <Rocket className="h-5 w-5" />
+            <OratorijIcon className="h-8 w-8" />
             <span>Oratorijska orodja</span>
           </div>
           <div className="flex items-center gap-4">
             <Button variant="ghost" asChild>
-              <Link href="/about">About</Link>
+              <a
+                href="https://github.com/samolego/OratorijskaOrodja"
+                target="_blank"
+              >
+                GitHub
+              </a>
             </Button>
             <Button asChild>
-              <Link href="/dashboard">Get Started</Link>
+              <Link href="/dashboard">Začni</Link>
             </Button>
           </div>
         </div>
@@ -58,7 +64,7 @@ export default function LandingPage() {
               <Card>
                 <CardHeader>
                   <div className="flex items-center gap-2">
-                    <Mail className="h-5 w-5" />
+                    <Contact className="h-5 w-5" />
                     <CardTitle>Izdelovalnik identifikacij</CardTitle>
                   </div>
                   <CardDescription>

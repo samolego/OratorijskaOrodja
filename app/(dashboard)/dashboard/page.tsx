@@ -7,7 +7,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Mail, QrCode, ArrowRight } from "lucide-react";
+import { Contact, QrCode, ArrowRight } from "lucide-react";
 
 export default function DashboardPage() {
   return (
@@ -18,7 +18,7 @@ export default function DashboardPage() {
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
-              <Mail className="h-5 w-5" />
+              <Contact className="h-5 w-5" />
               <CardTitle>Orodje za identifikacije</CardTitle>
             </div>
           </CardHeader>
