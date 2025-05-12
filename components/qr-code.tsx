@@ -50,11 +50,21 @@ export function QRCode({
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
     const img = new Image();
+    const margin = 10;
 
     img.onload = () => {
-      canvas.width = img.width;
-      canvas.height = img.height;
-      ctx?.drawImage(img, 0, 0);
+      // Add margin to canvas dimensions
+      canvas.width = img.width + margin * 2;
+      canvas.height = img.height + margin * 2;
+
+      // Fill background with white
+      if (ctx) {
+        ctx.fillStyle = "#fff";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+
+      // Draw image with margin offset
+      ctx?.drawImage(img, margin, margin);
       const pngFile = canvas.toDataURL("image/png");
 
       const downloadLink = document.createElement("a");
