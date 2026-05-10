@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Contact, QrCode, ArrowRight, Rocket } from "lucide-react";
+import { Contact, QrCode, ArrowRight, Rocket, CalendarDays } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -59,7 +59,7 @@ export default function LandingPage() {
             <h2 className="text-3xl font-bold tracking-tighter text-center mb-12">
               Orodja, ki so na voljo
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {/* Identifikacije Tool */}
               <Card>
                 <CardHeader>
@@ -111,6 +111,35 @@ export default function LandingPage() {
                   <Button className="w-full" asChild>
                     <Link href="/qr-code">
                       <span>Odpri generator QR kod</span>
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
+                  </Button>
+                </CardFooter>
+              </Card>
+
+              {/* Razpored delavnic */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <CalendarDays className="h-5 w-5" />
+                    <CardTitle>Razpored delavnic</CardTitle>
+                  </div>
+                  <CardDescription>
+                    Optimalna razporeditev skupin na delavnice po dnevih.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground">
+                    Algoritem razporedi skupine otrok na delavnice tako, da vsaka
+                    skupina čez teden vidi vsako delavnico vsaj enkrat. Upošteva
+                    kapacitete, starostne omejitve in ločeno obravnava 1h ter 2h
+                    delavnice.
+                  </p>
+                </CardContent>
+                <CardFooter>
+                  <Button className="w-full" asChild>
+                    <Link href="/razpored-delavnic">
+                      <span>Odpri razpored delavnic</span>
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                   </Button>
