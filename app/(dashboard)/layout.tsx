@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Contact, QrCode, Menu, X } from "lucide-react";
+import { Contact, QrCode, Menu, X, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -113,6 +113,11 @@ function SidebarNav({ closeMenu }: SidebarNavProps) {
       icon: <QrCode className="mr-2 h-4 w-4" />,
       href: "/qr-code",
       label: "Generator kod QR",
+    },
+    {
+      icon: <CalendarDays className="mr-2 h-4 w-4" />,
+      href: "/razpored-delavnic",
+      label: "Razpored delavnic",
     },
   ];
 
