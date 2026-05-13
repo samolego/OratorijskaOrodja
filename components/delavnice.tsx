@@ -217,13 +217,17 @@ function optimizeSA(
     if (validW1.length === 0 || validW2.length === 0) continue;
 
     const oldW1 = validW1[Math.floor(Math.random() * validW1.length)];
-    let oldW2 =
-      workshops[oldW1].dur === 2
-        ? oldW1
-        : validW2[Math.floor(Math.random() * validW2.length)];
+    let oldW2: number;
 
-    if (workshops[oldW1].dur === 2 && currentState[h2][g][oldW1] < moveCount)
-      continue;
+    // STROGO PREVERJANJE: Brisanje bloka 2h ali posamezne 1h delavnice
+    if (workshops[oldW1].dur === 2) {
+      oldW2 = oldW1;
+      if (currentState[h2][g][oldW2] < moveCount) continue;
+    } else {
+      const valid1hW2 = validW2.filter((w) => workshops[w].dur === 1);
+      if (valid1hW2.length === 0) continue;
+      oldW2 = valid1hW2[Math.floor(Math.random() * valid1hW2.length)];
+    }
 
     const b1 = currentState[h1][g][oldW1];
     const b2 = currentState[h2][g][oldW2];
@@ -232,11 +236,27 @@ function optimizeSA(
     currentState[h2][g][oldW2] -= moveCount;
 
     const possible = groupCompatW[g];
-    const nW1 = possible[Math.floor(Math.random() * possible.length)];
-    const nW2 =
-      workshops[nW1].dur === 2
-        ? nW1
-        : possible[Math.floor(Math.random() * possible.length)];
+    const possible1h = possible.filter((w) => workshops[w].dur === 1);
+    const possible2h = possible.filter((w) => workshops[w].dur === 2);
+
+    let nW1: number, nW2: number;
+
+    // STROGO PREVERJANJE: Dodajanje vedno 2h (v obeh terminih) ali dve 1h (posamično)
+    if (
+      possible2h.length > 0 &&
+      (possible1h.length === 0 || Math.random() < 0.3)
+    ) {
+      nW1 = possible2h[Math.floor(Math.random() * possible2h.length)];
+      nW2 = nW1;
+    } else if (possible1h.length > 0) {
+      nW1 = possible1h[Math.floor(Math.random() * possible1h.length)];
+      nW2 = possible1h[Math.floor(Math.random() * possible1h.length)];
+    } else {
+      // Revert in nadaljuj
+      currentState[h1][g][oldW1] = b1;
+      currentState[h2][g][oldW2] = b2;
+      continue;
+    }
 
     currentState[h1][g][nW1] += moveCount;
     currentState[h2][g][nW2] += moveCount;
@@ -370,20 +390,26 @@ export default function Delavnice() {
         const possible = groupCompatW[g];
         if (possible.length === 0) continue;
 
+        const p1h = possible.filter((wIdx) => workshops[wIdx].dur === 1);
+        const p2h = possible.filter((wIdx) => workshops[wIdx].dur === 2);
+
         for (let d = 0; d < numDays; d++) {
           let rem = groups[g].size;
           while (rem > 0) {
             const take = Math.min(rem, 2);
-            const wIdx = possible[Math.floor(Math.random() * possible.length)];
-            initial[d * 2][g][wIdx] += take;
 
-            if (workshops[wIdx].dur === 2) {
+            // STROGO PREVERJANJE: Polnjenje začetne matrike z nezlomljenimi bloki
+            if (p2h.length > 0 && (p1h.length === 0 || Math.random() < 0.4)) {
+              const wIdx = p2h[Math.floor(Math.random() * p2h.length)];
+              initial[d * 2][g][wIdx] += take;
               initial[d * 2 + 1][g][wIdx] += take;
-            } else {
-              const wIdx2 =
-                possible[Math.floor(Math.random() * possible.length)];
-              initial[d * 2 + 1][g][wIdx2] += take;
+            } else if (p1h.length > 0) {
+              const w1 = p1h[Math.floor(Math.random() * p1h.length)];
+              const w2 = p1h[Math.floor(Math.random() * p1h.length)];
+              initial[d * 2][g][w1] += take;
+              initial[d * 2 + 1][g][w2] += take;
             }
+
             rem -= take;
           }
         }
