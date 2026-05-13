@@ -37,6 +37,7 @@ interface SlotRef {
   day: number;
   /** 1 = first hour of the day, 2 = second hour. */
   hour: number;
+  count: number;
 }
 
 // ─── Colors ───────────────────────────────────────────────────
@@ -441,7 +442,8 @@ export default function Delavnice() {
     for (let d = 0; d < numDays; d++) {
       for (let h = 0; h < 2; h++) {
         if (state3D[d * 2 + h][groupIndex][workshopIndex] > 0) {
-          slots.push({ day: d + 1, hour: h + 1 });
+          const count = state3D[d * 2 + h][groupIndex][workshopIndex];
+          if (count > 0) slots.push({ day: d + 1, hour: h + 1, count: count });
         }
       }
     }
