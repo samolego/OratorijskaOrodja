@@ -4,7 +4,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -149,11 +148,6 @@ const Identifikacije = () => {
             </TabsContent>
           </Tabs>
         </CardContent>
-
-        <CardFooter className="border-t pt-4 text-sm text-gray-500">
-          Vse procesiranje se izvede na strani brskalnika. Vaši podatki nikoli
-          ne zapustijo vašega brskalnika in niso poslani nikamor.
-        </CardFooter>
       </Card>
     </div>
   );

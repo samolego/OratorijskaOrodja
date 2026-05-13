@@ -42,6 +42,11 @@ export default function LandingPage() {
         </div>
       </section>
 
+      <div className="pt-4 text-sm text-gray-500 text-center">
+        Vse procesiranje se izvede na strani brskalnika. Vaši podatki nikoli ne
+        zapustijo vašega brskalnika in niso poslani nikamor.
+      </div>
+
       {/* Footer */}
       <footer className="border-t">
         <div className="container max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between px-4 sm:px-8 py-8">

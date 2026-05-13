@@ -77,7 +77,7 @@ export function QRCode({
   };
 
   return (
-    <Card className={cn("w-full max-w-sm mx-auto", className)} {...props}>
+    <Card className={cn("w-full mx-auto", className)} {...props}>
       <CardHeader className="text-center">
         <CardTitle>QR Code Generator</CardTitle>
         <CardDescription>
@@ -129,13 +129,13 @@ export function QRCode({
 
         <div
           ref={qrRef}
-          className="flex justify-center items-center p-4 bg-white rounded-md min-h-[250px]"
+          className="flex justify-center items-center p-6 bg-white rounded-md min-h-[300px]"
         >
           {value ? (
             <div className="flex justify-center items-center w-full">
               <QRCodeReact
                 value={value}
-                size={200}
+                size={300}
                 level={errorLevel}
                 style={{ height: "auto", maxWidth: "100%" }}
               />

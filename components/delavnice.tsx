@@ -1,5 +1,6 @@
 "use client";
 import { useMemo, useState } from "react";
+import { Trash2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -697,6 +698,7 @@ export default function Delavnice() {
                         </p>
                       </div>
                       <Button variant="outline" size="sm" onClick={addWs}>
+                        <Plus className="h-4 w-4 mr-1" />
                         Dodaj delavnico
                       </Button>
                     </div>
@@ -760,9 +762,10 @@ export default function Delavnice() {
                               <Button
                                 onClick={() => removeWs(i)}
                                 variant="destructive"
-                                size="sm"
+                                size="icon"
+                                title="Odstrani"
                               >
-                                Odstrani
+                                <Trash2 className="h-4 w-4" />
                               </Button>
                             </td>
                           </tr>
@@ -793,6 +796,7 @@ export default function Delavnice() {
                         </p>
                       </div>
                       <Button variant="outline" size="sm" onClick={addGr}>
+                        <Plus className="h-4 w-4 mr-1" />
                         Dodaj skupino
                       </Button>
                     </div>
@@ -843,9 +847,10 @@ export default function Delavnice() {
                               <Button
                                 onClick={() => removeGr(i)}
                                 variant="destructive"
-                                size="sm"
+                                size="icon"
+                                title="Odstrani"
                               >
-                                Odstrani
+                                <Trash2 className="h-4 w-4" />
                               </Button>
                             </td>
                           </tr>
