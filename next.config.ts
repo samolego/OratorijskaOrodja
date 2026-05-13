@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-const basePath = "/OratorijskaOrodja";
+const basePath = "";
 
 const nextConfig: NextConfig = {
   basePath,
