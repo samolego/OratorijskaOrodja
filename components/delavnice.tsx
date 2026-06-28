@@ -432,18 +432,30 @@ export default function Delavnice() {
     }, 50);
   };
 
-  /** Returns every slot (day + hour) where a group-workshop pair appears. */
+/** Returns every slot (day + hour) where a group-workshop pair appears. */
   const getAssignedSlots = (
     groupIndex: number,
     workshopIndex: number,
   ): SlotRef[] => {
     if (!state3D) return [];
     const slots: SlotRef[] = [];
+    const duration = workshops[workshopIndex].dur; // Get duration of the specific workshop
+
     for (let d = 0; d < numDays; d++) {
-      for (let h = 0; h < 2; h++) {
-        if (state3D[d * 2 + h][groupIndex][workshopIndex] > 0) {
+      if (duration === 2) {
+        // For 2h workshops, the solver assigns both hours. 
+        // We only need to record the start (hour 1) to avoid duplication.
+        const count = state3D[d * 2][groupIndex][workshopIndex];
+        if (count > 0) {
+          slots.push({ day: d + 1, hour: 1, count: count });
+        }
+      } else {
+        // For 1h workshops, check both possible hours in the day
+        for (let h = 0; h < 2; h++) {
           const count = state3D[d * 2 + h][groupIndex][workshopIndex];
-          if (count > 0) slots.push({ day: d + 1, hour: h + 1, count: count });
+          if (count > 0) {
+            slots.push({ day: d + 1, hour: h + 1, count: count });
+          }
         }
       }
     }
